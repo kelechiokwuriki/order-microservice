@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
 const OrderSchema = mongoose.Schema({
-    customerId: Number,
-    productId: Number,
+    customerId: String,
+    productId: String,
+    status: String,
     amount: Number
 }, {
     timeStamps: true

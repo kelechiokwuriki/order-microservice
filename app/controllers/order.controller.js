@@ -1,8 +1,6 @@
-const config = require('../../config/config.js');
 const Order = require('../models/order.model.js');
 const axios = require('axios')
-
-const { paymentService } = config;
+const { paymentService } = require('../../config/config.js');
 
 exports.createOrder = async (req, res) => {
     // validate request
@@ -12,19 +10,16 @@ exports.createOrder = async (req, res) => {
             message: 'Bad request. Customer id or product id or amount missing.'
         });
     }
+    const {customerId, productId, amount} = req.body;
 
-    // save order
-    const newOrder = new Order({
-        'customerId': req.body.customerId,
-        'productId': req.body.productId,
-        'amount': req.body.amount
-    });
+    const newOrder = new Order({customerId, productId, amount, status: 'pending'});
 
     const orderSaved = await newOrder.save();
 
     if (!orderSaved) {
+        // log to kibana
         console.error(`An error occured while creating the order. 
-        CustomerId: ${req.body.customerId}, ProductId: ${req.body.productId}, Amount: ${req.body.amount}`);
+        CustomerId: ${customerId}, ProductId: ${productId}, Amount: ${amount}`);
 
         return res.status(400).send({
             success: false,
@@ -32,10 +27,30 @@ exports.createOrder = async (req, res) => {
         });
     }
 
-    return res.status(201).send({
-        success: true,
-        message: 'Order created successfully',
-        data: orderSaved
-    });
+    const orderData = {
+        order: orderSaved,
+        productId,
+        customerId,
+        amount
+    }
+
+    try {
+        const {data} = await axios.post(`${paymentService.url}/payment`, orderData);
+        delete orderData.order;
+        orderData.orderId = orderSaved._id;
+        orderData.orderStatus = orderSaved.status;
+        
+        return res.status(201).send({
+            success: true,
+            message: data.message,
+            data: orderData
+        }); 
+    } catch (e) {
+        console.error('An error occured while sending order to the payment service. Error: ', error);
+        return res.status(400).send({
+            success: false,
+            message: 'An error occured while billing the order.'
+        });
+    }
 };
 

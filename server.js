@@ -20,6 +20,6 @@ mongoose.connect(dbConfig.url, {
 require('./app/routes/order.routes.js')(app);
 
 app.listen(4000, () => {
-    console.log('API running on port 4000');
+    console.log('Order API running on port 4000');
 })
 
