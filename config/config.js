@@ -1,5 +1,5 @@
 module.exports = {
     paymentService: {
-        url: 'http://localhost:5000'
+        url: 'http://payment-service:5000'
     }
 }

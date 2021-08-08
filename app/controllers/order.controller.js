@@ -2,6 +2,7 @@ const Order = require('../models/order.model.js');
 const axios = require('axios')
 const { paymentService } = require('../../config/config.js');
 
+
 exports.createOrder = async (req, res) => {
     // validate request
     if (!req.body.customerId || !req.body.productId || !req.body.amount) {
@@ -35,18 +36,27 @@ exports.createOrder = async (req, res) => {
     }
 
     try {
-        const {data} = await axios.post(`${paymentService.url}/payment`, orderData);
+        let axiosConfig = {
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8',
+                "Access-Control-Allow-Origin": "*",
+                'Content-Length': Object.keys(orderData).length
+            }
+          };
+
+        const {data} = await axios.post(`${paymentService.url}/payment`, orderData, axiosConfig);
+        
         delete orderData.order;
         orderData.orderId = orderSaved._id;
         orderData.orderStatus = orderSaved.status;
-        
+
         return res.status(201).send({
             success: true,
             message: data.message,
             data: orderData
-        }); 
+        });
     } catch (e) {
-        console.error('An error occured while sending order to the payment service. Error: ', error);
+        console.error('An error occured while sending order to the payment service. Error: ', e);
         return res.status(400).send({
             success: false,
             message: 'An error occured while billing the order.'

@@ -1,0 +1,27 @@
+version: '3.7'
+services:
+  order-service:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    container_name: order-service
+    # networks:
+    #   - e-commerce-app
+    # links:
+    #   - order-service-db
+  order-service-db:
+    image: mongo
+    # networks:
+    #   - e-commerce-app
+    ports:
+      - "27019:27017"
+    container_name: order-service-db
+    volumes:
+      - ./db/:/data/db
+
+networks:
+  default:
+    external: true
+    name: e-commerce-app
