@@ -29,30 +29,21 @@ exports.createOrder = async (req, res) => {
     }
 
     const orderData = {
-        order: orderSaved,
+        orderId: orderSaved._id,
         productId,
         customerId,
         amount
     }
 
     try {
-        let axiosConfig = {
-            headers: {
-                'Content-Type': 'application/json;charset=UTF-8',
-                "Access-Control-Allow-Origin": "*",
-                'Content-Length': Object.keys(orderData).length
-            }
-          };
-
-        const {data} = await axios.post(`${paymentService.url}/payment`, orderData, axiosConfig);
+        axios.post(`${paymentService.url}/payment`, orderData);
         
-        delete orderData.order;
-        orderData.orderId = orderSaved._id;
+        delete orderData.orderId;
         orderData.orderStatus = orderSaved.status;
 
         return res.status(201).send({
             success: true,
-            message: data.message,
+            message: 'Order created successfully',
             data: orderData
         });
     } catch (e) {
